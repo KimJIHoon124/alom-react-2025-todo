@@ -1,69 +1,89 @@
 import { useEffect, useState } from "react";
 import styles from "./todo-list.module.css";
 import TodoItem from "./todo-item";
+import { db } from "../firebase"; // firebase.js 경로 맞게 조정
+import {
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  orderBy
+} from "firebase/firestore";
 
 function Example() {
   const [toDo, setTodo] = useState("");
   const [toDos, setTodos] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  function onChange(e) {
-    setTodo(e.target.value);
-  }
+  const todosRef = collection(db, "todos");
 
-  function onSubmit(e) {
+  const fetchTodos = async () => {
+    const q = query(todosRef, orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    const result = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setTodos(result);
+    setLoading(false);
+  };
+
+  const addTodo = async (e) => {
     e.preventDefault();
     if (!toDo.trim()) {
-      alert("올바른 값을 입력해주세요");
+      alert("내용을 입력하세요.");
       setTodo("");
       return;
     }
-    if (toDos.includes(toDo)) {
-      alert("이미 같은 값이 존재합니다");
+    const duplicate = toDos.find((t) => t.content === toDo.trim());
+    if (duplicate) {
+      alert("이미 존재하는 할 일입니다.");
       return;
     }
-    setTodos((prev) => [toDo, ...prev]);
+    await addDoc(todosRef, {
+      content: toDo.trim(),
+      createdAt: Date.now(),
+    });
     setTodo("");
-  }
+    fetchTodos();
+  };
 
-  function onDelete(content) {
-    const newTodos = toDos.filter((todo) => todo !== content);
-    setTodos(newTodos);
-  }
+  const deleteTodo = async (id) => {
+    await deleteDoc(doc(db, "todos", id));
+    fetchTodos();
+  };
 
   useEffect(() => {
-    const saved = localStorage.getItem("my_todos");
-    if (saved) {
-      setTodos(JSON.parse(saved));
-    }
-    setLoading(true);
+    fetchTodos();
   }, []);
-
-  useEffect(() => {
-    if (loading) {
-      localStorage.setItem("my_todos", JSON.stringify(toDos));
-    }
-  }, [toDos, loading]);
 
   return (
     <div className={styles.container}>
       <h1>My To Dos ({toDos.length})</h1>
-      <form onSubmit={onSubmit} className={styles.form_container}>
+      <form onSubmit={addTodo} className={styles.form_container}>
         <input
           type="text"
           value={toDo}
-          onChange={onChange}
+          onChange={(e) => setTodo(e.target.value)}
           placeholder="할 일을 입력하세요."
         />
         <button type="submit">작성하기</button>
       </form>
       <hr />
-      {toDos.length === 0 ? (
+      {loading ? (
+        <div>불러오는 중...</div>
+      ) : toDos.length === 0 ? (
         <div>예정된 할 일이 없습니다.</div>
       ) : (
         <div className={styles.todo_list_container}>
-          {toDos.map((todo, idx) => (
-            <TodoItem key={idx} content={todo} onDelete={onDelete} />
+          {toDos.map((todo) => (
+            <TodoItem
+              key={todo.id}
+              content={todo.content}
+              onDelete={() => deleteTodo(todo.id)}
+            />
           ))}
         </div>
       )}
