@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import styles from "./todo-list.module.css";
 import TodoItem from "./todo-item";
-import { db } from "../firebase"; // firebase.js 경로 맞게 조정
+import { db } from "../firebase";
+
 import {
   collection,
   addDoc,
@@ -17,7 +18,7 @@ function Example() {
   const [toDos, setTodos] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const todosRef = collection(db, "todos");
+  const todosRef = collection(db, "todos"); 
 
   const fetchTodos = async () => {
     const q = query(todosRef, orderBy("createdAt", "desc"));
