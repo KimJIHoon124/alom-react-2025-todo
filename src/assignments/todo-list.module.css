@@ -5,6 +5,26 @@
   font-family: sans-serif;
 }
 
+.group_bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.group_bar button {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  background: #eee;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.group_bar .selected {
+  background: #333;
+  color: white;
+}
+
 .form_container {
   display: flex;
   gap: 10px;

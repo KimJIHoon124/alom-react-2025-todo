@@ -1,24 +1,27 @@
+
 import { useEffect, useState } from "react";
 import styles from "./todo-list.module.css";
 import TodoItem from "./todo-item";
 import { db } from "../firebase";
-
 import {
   collection,
   addDoc,
   getDocs,
   deleteDoc,
   doc,
+  updateDoc,
   query,
-  orderBy
+  orderBy,
 } from "firebase/firestore";
 
 function Example() {
   const [toDo, setTodo] = useState("");
   const [toDos, setTodos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [groups, setGroups] = useState(["기본"]);
+  const [selectedGroup, setSelectedGroup] = useState("기본");
+  const [newGroupName, setNewGroupName] = useState("");
 
-  const todosRef = collection(db, "todos"); 
+  const todosRef = collection(db, "todos");
 
   const fetchTodos = async () => {
     const q = query(todosRef, orderBy("createdAt", "desc"));
@@ -28,24 +31,17 @@ function Example() {
       ...doc.data(),
     }));
     setTodos(result);
-    setLoading(false);
+    const allGroups = [...new Set(result.map((t) => t.group))];
+    setGroups(allGroups);
   };
 
   const addTodo = async (e) => {
     e.preventDefault();
-    if (!toDo.trim()) {
-      alert("내용을 입력하세요.");
-      setTodo("");
-      return;
-    }
-    const duplicate = toDos.find((t) => t.content === toDo.trim());
-    if (duplicate) {
-      alert("이미 존재하는 할 일입니다.");
-      return;
-    }
+    if (!toDo.trim()) return;
     await addDoc(todosRef, {
       content: toDo.trim(),
       createdAt: Date.now(),
+      group: selectedGroup,
     });
     setTodo("");
     fetchTodos();
@@ -56,13 +52,47 @@ function Example() {
     fetchTodos();
   };
 
+  const renameGroup = async () => {
+    if (!newGroupName.trim()) return;
+    const filtered = toDos.filter((t) => t.group === selectedGroup);
+    for (const item of filtered) {
+      const ref = doc(db, "todos", item.id);
+      await updateDoc(ref, { group: newGroupName });
+    }
+    setSelectedGroup(newGroupName);
+    setNewGroupName("");
+    fetchTodos();
+  };
+
   useEffect(() => {
     fetchTodos();
   }, []);
 
+  const filteredTodos = toDos.filter((t) => t.group === selectedGroup);
+
   return (
     <div className={styles.container}>
-      <h1>My To Dos ({toDos.length})</h1>
+      <h1>📌 {selectedGroup} ({filteredTodos.length})</h1>
+
+      <div className={styles.group_bar}>
+        {groups.map((g) => (
+          <button
+            key={g}
+            onClick={() => setSelectedGroup(g)}
+            className={g === selectedGroup ? styles.selected : ""}
+          >
+            {g}
+          </button>
+        ))}
+        <input
+          type="text"
+          placeholder="새 그룹명"
+          value={newGroupName}
+          onChange={(e) => setNewGroupName(e.target.value)}
+        />
+        <button onClick={renameGroup}>이름 변경</button>
+      </div>
+
       <form onSubmit={addTodo} className={styles.form_container}>
         <input
           type="text"
@@ -70,24 +100,22 @@ function Example() {
           onChange={(e) => setTodo(e.target.value)}
           placeholder="할 일을 입력하세요."
         />
-        <button type="submit">작성하기</button>
+        <button type="submit">추가</button>
       </form>
-      <hr />
-      {loading ? (
-        <div>불러오는 중...</div>
-      ) : toDos.length === 0 ? (
-        <div>예정된 할 일이 없습니다.</div>
-      ) : (
-        <div className={styles.todo_list_container}>
-          {toDos.map((todo) => (
+
+      <div className={styles.todo_list_container}>
+        {filteredTodos.length === 0 ? (
+          <p>할 일이 없습니다.</p>
+        ) : (
+          filteredTodos.map((todo) => (
             <TodoItem
               key={todo.id}
               content={todo.content}
               onDelete={() => deleteTodo(todo.id)}
             />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
