@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import styles from "./todo-list.module.css";
 import TodoItem from "./todo-item";
@@ -35,20 +34,21 @@ function Example() {
     setGroups(allGroups);
   };
 
-  const addOrRenameGroup = () => {
+  const addGroup = () => {
+    const name = groupInput.trim();
+    if (!name || groups.includes(name)) return;
+    setGroups([...groups, name]);
+    setSelectedGroup(name);
+    setGroupInput("");
+  };
+
+  const renameGroup = async () => {
     const name = groupInput.trim();
     if (!name) return;
-    if (!groups.includes(name)) {
-      setGroups([...groups, name]);
-    } else {
-      const rename = async () => {
-        const filtered = toDos.filter((t) => t.group === selectedGroup);
-        for (const item of filtered) {
-          const ref = doc(db, "todos", item.id);
-          await updateDoc(ref, { group: name });
-        }
-      };
-      rename();
+    const filtered = toDos.filter((t) => t.group === selectedGroup);
+    for (const item of filtered) {
+      const ref = doc(db, "todos", item.id);
+      await updateDoc(ref, { group: name });
     }
     setSelectedGroup(name);
     setGroupInput("");
@@ -89,7 +89,8 @@ function Example() {
           value={groupInput}
           onChange={(e) => setGroupInput(e.target.value)}
         />
-        <button onClick={addOrRenameGroup}>그룹명변경 / 그룹생성</button>
+        <button onClick={renameGroup}>그룹명 변경</button>
+        <button onClick={addGroup}>그룹 생성</button>
       </div>
 
       <div className={styles.group_bar}>
