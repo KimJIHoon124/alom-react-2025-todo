@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import styles from "./todo-list.module.css";
 import TodoItem from "./todo-item";
@@ -18,8 +19,7 @@ function Example() {
   const [toDos, setTodos] = useState([]);
   const [groups, setGroups] = useState(["기본"]);
   const [selectedGroup, setSelectedGroup] = useState("기본");
-  const [newGroupName, setNewGroupName] = useState("");
-  const [newGroupToAdd, setNewGroupToAdd] = useState("");
+  const [groupInput, setGroupInput] = useState("");
 
   const todosRef = collection(db, "todos");
 
@@ -33,6 +33,26 @@ function Example() {
     setTodos(result);
     const allGroups = [...new Set(result.map((t) => t.group))];
     setGroups(allGroups);
+  };
+
+  const addOrRenameGroup = () => {
+    const name = groupInput.trim();
+    if (!name) return;
+    if (!groups.includes(name)) {
+      setGroups([...groups, name]);
+    } else {
+      const rename = async () => {
+        const filtered = toDos.filter((t) => t.group === selectedGroup);
+        for (const item of filtered) {
+          const ref = doc(db, "todos", item.id);
+          await updateDoc(ref, { group: name });
+        }
+      };
+      rename();
+    }
+    setSelectedGroup(name);
+    setGroupInput("");
+    fetchTodos();
   };
 
   const addTodo = async (e) => {
@@ -52,26 +72,6 @@ function Example() {
     fetchTodos();
   };
 
-  const renameGroup = async () => {
-    if (!newGroupName.trim()) return;
-    const filtered = toDos.filter((t) => t.group === selectedGroup);
-    for (const item of filtered) {
-      const ref = doc(db, "todos", item.id);
-      await updateDoc(ref, { group: newGroupName });
-    }
-    setSelectedGroup(newGroupName);
-    setNewGroupName("");
-    fetchTodos();
-  };
-
-  const addGroup = () => {
-    const name = newGroupToAdd.trim();
-    if (!name || groups.includes(name)) return;
-    setGroups([...groups, name]);
-    setSelectedGroup(name);
-    setNewGroupToAdd("");
-  };
-
   useEffect(() => {
     fetchTodos();
   }, []);
@@ -80,36 +80,28 @@ function Example() {
 
   return (
     <div className={styles.container}>
-      <h1>📌 {selectedGroup} ({filteredTodos.length})</h1>
+      <h1>{selectedGroup} ({filteredTodos.length})</h1>
+
+      <div className={styles.group_input_section}>
+        <input
+          type="text"
+          placeholder="그룹명 입력"
+          value={groupInput}
+          onChange={(e) => setGroupInput(e.target.value)}
+        />
+        <button onClick={addOrRenameGroup}>그룹명변경 / 그룹생성</button>
+      </div>
 
       <div className={styles.group_bar}>
         {groups.map((g) => (
           <button
             key={g}
             onClick={() => setSelectedGroup(g)}
-            className={g === selectedGroup ? styles.selected : ""}
+            className={`${styles.tab} ${g === selectedGroup ? styles.selected : ""}`}
           >
             {g}
           </button>
         ))}
-
-        {/* 새 그룹 추가 */}
-        <input
-          type="text"
-          placeholder="새 그룹"
-          value={newGroupToAdd}
-          onChange={(e) => setNewGroupToAdd(e.target.value)}
-        />
-        <button onClick={addGroup}>그룹 추가</button>
-
-        {/* 이름 변경 */}
-        <input
-          type="text"
-          placeholder="이름 변경"
-          value={newGroupName}
-          onChange={(e) => setNewGroupName(e.target.value)}
-        />
-        <button onClick={renameGroup}>이름 변경</button>
       </div>
 
       <form onSubmit={addTodo} className={styles.form_container}>

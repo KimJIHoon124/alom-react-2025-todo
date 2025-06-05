@@ -1,46 +1,60 @@
+
 .container {
   padding: 20px;
-  max-width: 500px;
+  max-width: 600px;
   margin: 0 auto;
   font-family: sans-serif;
 }
 
+.group_input_section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
 .group_bar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #aaa;
+  padding-bottom: 5px;
 }
 
-.group_bar button {
-  padding: 6px 12px;
-  border: 1px solid #ccc;
-  background: #eee;
-  border-radius: 4px;
+.tab {
+  background-color: #f5f5f5;
+  border: 2px solid #999;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  padding: 6px 14px;
   cursor: pointer;
+  font-weight: bold;
 }
 
-.group_bar .selected {
-  background: #333;
-  color: white;
+.selected {
+  background-color: white;
+  border-bottom: 2px solid white;
+  color: black;
 }
 
 .form_container {
   display: flex;
   gap: 10px;
+  margin-bottom: 20px;
 }
 
 .todo_list_container {
-  margin-top: 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .todo_item {
+  background-color: #f0f8ff;
+  border: 1px solid #cce;
+  padding: 12px 16px;
+  border-radius: 30px;
   display: flex;
   justify-content: space-between;
-  border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 5px;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
