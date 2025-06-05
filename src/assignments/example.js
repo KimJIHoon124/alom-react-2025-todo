@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import styles from "./todo-list.module.css";
 import TodoItem from "./todo-item";
@@ -20,6 +19,7 @@ function Example() {
   const [groups, setGroups] = useState(["기본"]);
   const [selectedGroup, setSelectedGroup] = useState("기본");
   const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupToAdd, setNewGroupToAdd] = useState("");
 
   const todosRef = collection(db, "todos");
 
@@ -64,6 +64,14 @@ function Example() {
     fetchTodos();
   };
 
+  const addGroup = () => {
+    const name = newGroupToAdd.trim();
+    if (!name || groups.includes(name)) return;
+    setGroups([...groups, name]);
+    setSelectedGroup(name);
+    setNewGroupToAdd("");
+  };
+
   useEffect(() => {
     fetchTodos();
   }, []);
@@ -84,9 +92,20 @@ function Example() {
             {g}
           </button>
         ))}
+
+        {/* 새 그룹 추가 */}
         <input
           type="text"
-          placeholder="새 그룹명"
+          placeholder="새 그룹"
+          value={newGroupToAdd}
+          onChange={(e) => setNewGroupToAdd(e.target.value)}
+        />
+        <button onClick={addGroup}>그룹 추가</button>
+
+        {/* 이름 변경 */}
+        <input
+          type="text"
+          placeholder="이름 변경"
           value={newGroupName}
           onChange={(e) => setNewGroupName(e.target.value)}
         />

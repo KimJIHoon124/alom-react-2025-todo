@@ -1,4 +1,3 @@
-
 import styles from "./todo-list.module.css";
 
 function TodoItem({ content, onDelete }) {
